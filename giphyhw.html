@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+
+<head>  <script src="giff.js"></script> 
+    <link rel="stylesheet" type="text/css" href="giphycss.css">
+</head>
+<body>
+    <div class="title-search-bar">
+        <h1>Giphy API Generator</h1>
+        <div id="buttons"></div>
+        <div class="search-bar">
+            <input type="text" name="query" id="user-search" />
+            <input id="submit" type="button" value="Submit" class="btn  btn-sm btn-success" />
+            <input type="button" class="trending btn btn-sm btn-danger" value="See what's trending" />
+        </div>
+    </div>
+    <hr>
+    <div id="results"></div>
+    <script src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+    // Initial Search Buttons
+var topics = ["Dogs", "Wine", "Popcorn", "Space", "Impractical Jokers"];
+function addSearchBtns() {
+  $("#buttons").html("");
+  //create for loop that runs through the topics
+  for (i = 0; i < topics.length; i++) {
+    var $button = $("<input type='button' class='btn btn-sm search-btn' />");
+    $button.val(topics[i]);
+    $("#buttons").append($button);
+  }
+}
+addSearchBtns();
+//when button is clicked, display them in the div id results 
+$(document).on("click", ".btn", function() {
+  $("#results").html("");
+  // Beginning API call
+  var queryURL = "https://api.giphy.com/v1/gifs/search?";
+  var query;
+  var params = {
+    q: query,
+    limit: 10,
+    api_key: "5SR5PvPn6zOfoIKrRWqLslQ7S8T9V5EY",
+    fmt: "json"
+  };
+  //if  something has a class of search-btn, then query 
+  // else if a user searches in the search bar, then query a response from the giphy api that generates a button with that
+  //user search and then generates the gifs as well 
+  if ($(this).hasClass("search-btn")) {
+    query = $(this).val();
+  } else if ($("#user-search").val() !== "") {
+    query = $("#user-search").val();
+    topics.push(query);
+    if (topics.length > 6) {
+      topics.shift();
+    }
+    addSearchBtns();
+  }
+  params.q = query;
+//if a topic is trending then pull in trending topics 
+  if ($(this).hasClass("trending")) {
+    queryURL = "https://api.giphy.com/v1/gifs/trending?";
+    delete params.q;
+  }
+  $.ajax({
+    url: queryURL + $.param(params),
+    method: "GET",
+    success: function(r) {
+      for (i = 0; i < params.limit; i++) {
+        var $img = $("<img>");
+        var $div = $("<div>");
+        var $rating = $("<h6>");
+        var gifObj = r.data[i];
+        var gif = gifObj.images;
+
+        // Image builder object
+        $img.attr({
+          // "width": "200px",
+          src: gif.fixed_height_still.url,
+          "data-animate": gif.fixed_height.url,
+          "data-still": gif.fixed_height_still.url,
+          "data-state": "still",
+          class: "gif"
+        });
+        // $div.attr("id", "gif-" + i);
+        $div.addClass("gif-box");
+        $rating.text("Rating: " + gifObj.rating);
+        $div.append($img, $rating);
+        $("#results").append($div);
+      }
+        //if a data state is still, then change the state to animate
+        //
+      $(".gif").on("click", function() {
+        var state = $(this).attr("data-state");
+        if (state === "still") {
+          $(this).attr("src", $(this).attr("data-animate"));
+          $(this).attr("data-state", "animate");
+        } else {
+          $(this).attr("src", $(this).attr("data-still"));
+          $(this).attr("data-state", "still");
+        }
+      });
+    }
+  });
+});
+    
+    
+    
+    </script>
+    </body>
+    </html>
